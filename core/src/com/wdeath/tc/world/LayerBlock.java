@@ -66,6 +66,7 @@ public class LayerBlock {
 
         chainShape.createLoop(vec);
         def.shape = chainShape;
+        def.friction = 0.1f;
 
         Fixture fixture = body.createFixture(def);
         fixtures[x][y] = fixture;
