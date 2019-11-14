@@ -6,45 +6,40 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.wdeath.tc.Assets;
 import com.wdeath.tc.utility.GameCanvas;
+import com.wdeath.tc.world.WorldFilters;
 import com.wdeath.tc.world.WorldMap;
+import com.wdeath.tc.world.objects.AbstractAliveObjectWorld;
 import com.wdeath.tc.world.objects.ObjectBodyWorld;
 
-public class PlayerObjectWorld extends ObjectBodyWorld {
+public class PlayerObjectWorld extends AbstractAliveObjectWorld {
 
     private PlayerData playerData;
-    private Fixture fixture;
     private Sprite sprite;
+    private WorldMap worldMap;
 
     public PlayerObjectWorld(PlayerData playerData, WorldMap worldMap){
-        this.setWorldMap(worldMap);
         this.playerData = playerData;
-        createBody();
+        this.worldMap = worldMap;
         TextureRegion tex = Assets.get("ground");
         sprite = new Sprite(tex);
+        init();
+        setPosition(worldMap.getSpawnPoint("player").x, worldMap.getSpawnPoint("player").y);
     }
 
-    private void createBody(){
-        BodyDef def = new BodyDef();
-        def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(getWorldMap().getSpawnPoint("player"));
-        def.fixedRotation = true;
-
-        Body body = getWorldMap().world.createBody(def);
-        this.setBody(body);
-        createFixture();
+    @Override
+    public Vector2 getPositionCenter() {
+        return mainBody.getPosition();
     }
 
-    private void createFixture(){
-        FixtureDef def = new FixtureDef();
-        def.density = 0.5f;
-        def.restitution = 0.1f;
-        def.friction = 0.2f;
+    @Override
+    public void setPosition(float x, float y) {
+        mainBody.setTransform(x, y, mainBody.getAngle());
+        limbsBody[0].setTransform(x, y, limbsBody[0].getAngle());
+    }
 
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(PlayerData.WIDTH / 2, PlayerData.HEIGHT / 2);
-
-        def.shape = shape;
-        fixture = getBody().createFixture(def);
+    @Override
+    public Vector2 getAABBRectangle() {
+        return null;
     }
 
     @Override
@@ -52,7 +47,6 @@ public class PlayerObjectWorld extends ObjectBodyWorld {
         sprite.setPosition(getPositionCenter().x - PlayerData.WIDTH/2, getPositionCenter().y - PlayerData.HEIGHT/2);
         sprite.setSize(PlayerData.WIDTH, PlayerData.HEIGHT);
         sprite.setOrigin(PlayerData.WIDTH/2, PlayerData.HEIGHT/2);
-        sprite.setRotation((float)Math.toDegrees(getBody().getAngle()));
         sprite.draw(gameCanvas.batch);
 //        gameCanvas.batch.draw(tex, getPositionCenter().x - PlayerData.WIDTH/2, getPositionCenter().y - PlayerData.HEIGHT/2, PlayerData.WIDTH, PlayerData.HEIGHT);
     }
@@ -60,5 +54,64 @@ public class PlayerObjectWorld extends ObjectBodyWorld {
     @Override
     public void update() {
 
+    }
+
+    @Override
+    public int getNumLimb() {
+        return 1;
+    }
+
+    @Override
+    public void initMainBody() {
+        BodyDef def = new BodyDef();
+        def.type = BodyDef.BodyType.DynamicBody;
+        def.fixedRotation = true;
+
+        mainBody = worldMap.world.createBody(def);
+    }
+
+    @Override
+    public void initLimbsBody() {
+        BodyDef def = new BodyDef();
+        def.type = BodyDef.BodyType.DynamicBody;
+
+        limbsBody[0] = worldMap.world.createBody(def);
+    }
+
+    @Override
+    public void initMainFixture() {
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(PlayerData.WIDTH / 2, PlayerData.HEIGHT / 2);
+
+        FixtureDef def = new FixtureDef();
+        def.shape = shape;
+        def.filter.groupIndex = WorldFilters.GROUP_PLAYER;
+        def.density = 1f;
+        def.friction = 0.1f;
+
+        mainFixture = mainBody.createFixture(def);
+    }
+
+    public Body getLeg(){
+        return limbsBody[0];
+    }
+
+    @Override
+    public void initLimbsFixture() {
+        CircleShape shape = new CircleShape();
+        shape.setRadius(PlayerData.WIDTH / 2);
+
+        FixtureDef def = new FixtureDef();
+        def.shape = shape;
+        def.filter.groupIndex = WorldFilters.GROUP_PLAYER;
+        def.friction = 2f;
+        def.density = 1f;
+
+        limbsFixture[0] = limbsBody[0].createFixture(def);
+    }
+
+    @Override
+    public void initJoin() {
+        connectionBodyAndLimb(limbsBody[0], new Vector2(0, -PlayerData.HEIGHT / 2), new Vector2(), worldMap);
     }
 }

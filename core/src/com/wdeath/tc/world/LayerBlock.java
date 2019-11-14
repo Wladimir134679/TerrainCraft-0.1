@@ -66,7 +66,8 @@ public class LayerBlock {
 
         chainShape.createLoop(vec);
         def.shape = chainShape;
-        def.friction = 0.1f;
+        def.friction = 0.5f;
+        def.filter.groupIndex = WorldFilters.GROUP_WORLD;
 
         Fixture fixture = body.createFixture(def);
         fixtures[x][y] = fixture;
@@ -96,9 +97,9 @@ public class LayerBlock {
         if(y2 < 0)
             y2 = 0;
         if(x2 >= worldMap.width)
-            x2 = worldMap.width - 1;
+            x2 = worldMap.width;
         if(y2 >= worldMap.height)
-            y2 = worldMap.height - 1;
+            y2 = worldMap.height;
 
         for(int x = x1; x < x2; x++){
             for(int y = y1; y < y2; y++){
@@ -111,5 +112,9 @@ public class LayerBlock {
                 canvas.batch.draw(texture, x, y, 1, 1);
             }
         }
+    }
+
+    public WorldMap getWorld(){
+        return worldMap;
     }
 }

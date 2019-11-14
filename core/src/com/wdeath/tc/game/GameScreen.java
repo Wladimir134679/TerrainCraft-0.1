@@ -74,7 +74,11 @@ public class GameScreen implements Screen {
 
         screen.begin();
         String fps = "FPS: " + Gdx.graphics.getFramesPerSecond();
+        String sX = "X: " + playerObjectWorld.getBody().getLinearVelocity().x;
+        String sY = "Y: " + playerObjectWorld.getBody().getLinearVelocity().y;
         fontInfo.draw(screen.batch, fps, 10, fontInfo.getCapHeight() + 10);
+        fontInfo.draw(screen.batch, sX, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
+        fontInfo.draw(screen.batch, sY, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
         screen.end();
 
         if(Gdx.input.isKeyPressed(Input.Keys.Q)){
@@ -87,6 +91,12 @@ public class GameScreen implements Screen {
             canvas.getCamera().zoom = 1;
         }
 
+        if(Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.A)){
+            playerObjectWorld.getLeg().setFixedRotation(false);
+        }else{
+            playerObjectWorld.getLeg().setFixedRotation(true);
+        }
+
         float speed = 5f;
         if(Gdx.input.isKeyPressed(Input.Keys.W)){
            playerObjectWorld.getBody().applyForceToCenter(0, speed * 5, false);
@@ -95,11 +105,20 @@ public class GameScreen implements Screen {
             playerObjectWorld.getBody().applyForceToCenter(0, -speed, false);
         }
         if(Gdx.input.isKeyPressed(Input.Keys.A)){
-            playerObjectWorld.getBody().applyForceToCenter(-speed, 0, false);
+//            playerObjectWorld.getBody().applyForceToCenter(-speed, 0, false);
+            playerObjectWorld.getLeg().applyTorque(5f, false);
         }
         if(Gdx.input.isKeyPressed(Input.Keys.D)){
-            playerObjectWorld.getBody().applyForceToCenter(speed, 0, false);
+            playerObjectWorld.getLeg().applyTorque(-5f, false);
         }
+        Vector2 lin = playerObjectWorld.getBody().getLinearVelocity();
+        if(Math.abs(lin.x) < 0.01f){
+            lin.x = 0;
+        }
+        if(Math.abs(lin.y) < 0.01f){
+            lin.y = 0;
+        }
+        playerObjectWorld.getBody().setLinearVelocity(lin);
     }
 
     @Override
