@@ -6,19 +6,11 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.World;
-import com.wdeath.tc.item.Item;
 import com.wdeath.tc.item.ItemLoader;
-import com.wdeath.tc.item.blocks.GroundBlock;
 import com.wdeath.tc.player.PlayerData;
-import com.wdeath.tc.player.PlayerObjectWorld;
 import com.wdeath.tc.utility.GameCanvas;
-import com.wdeath.tc.utility.Perlin2D;
 import com.wdeath.tc.world.GenerateFlow;
-import com.wdeath.tc.world.GenerateWorld;
 import com.wdeath.tc.world.WorldMap;
-
-import java.util.Random;
 
 public class GameScreen implements Screen {
 
@@ -26,9 +18,11 @@ public class GameScreen implements Screen {
     private GameCanvas screen;
     private BitmapFont fontInfo;
     private WorldMap worldMap;
+    private CursorWorld cursorWorld;
 
     private PlayerData playerData;
-    private PlayerObjectWorld playerObjectWorld;
+
+    private boolean isDebug = true;
 
     @Override
     public void show() {
@@ -52,33 +46,26 @@ public class GameScreen implements Screen {
         ItemLoader.init();
         worldMap = new WorldMap(400, 200);
 
-        GenerateFlow generateFlow = new GenerateFlow();
-        generateFlow.gen(worldMap);
+        cursorWorld = new CursorWorld(this);
 
-        playerData = new PlayerData("PlayerTest");
-        playerObjectWorld = new PlayerObjectWorld(playerData, worldMap);
-
-        worldMap.addObject(playerObjectWorld);
-
-        canvas.getCamera().position.set(worldMap.getSpawnPoint("player").x, worldMap.getSpawnPoint("player").y, 0);
+        Gdx.input.setInputProcessor(new InputListener(this));
     }
 
     @Override
     public void render(float delta) {
-        canvas.getCamera().position.set(playerObjectWorld.getPositionCenter(), 0);
+//        canvas.getCamera().position.set(playerObjectWorld.getPositionCenter(), 0);
         canvas.begin();
-        worldMap.render(canvas);
+//        worldMap.render(canvas);
+        cursorWorld.render(canvas);
         canvas.end();
-
-        worldMap.debug(canvas);
 
         screen.begin();
         String fps = "FPS: " + Gdx.graphics.getFramesPerSecond();
-        String sX = "X: " + playerObjectWorld.getBody().getLinearVelocity().x;
-        String sY = "Y: " + playerObjectWorld.getBody().getLinearVelocity().y;
+//        String sX = "X: " + playerObjectWorld.getBody().getLinearVelocity().x;
+//        String sY = "Y: " + playerObjectWorld.getBody().getLinearVelocity().y;
         fontInfo.draw(screen.batch, fps, 10, fontInfo.getCapHeight() + 10);
-        fontInfo.draw(screen.batch, sX, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
-        fontInfo.draw(screen.batch, sY, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
+//        fontInfo.draw(screen.batch, sX, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
+//        fontInfo.draw(screen.batch, sY, 10, fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10 + fontInfo.getCapHeight() + 10);
         screen.end();
 
         if(Gdx.input.isKeyPressed(Input.Keys.Q)){
@@ -91,34 +78,50 @@ public class GameScreen implements Screen {
             canvas.getCamera().zoom = 1;
         }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.A)){
-            playerObjectWorld.getLeg().setFixedRotation(false);
-        }else{
-            playerObjectWorld.getLeg().setFixedRotation(true);
-        }
+//        if(Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.A)){
+//            playerObjectWorld.getLeg().setFixedRotation(false);
+//        }else{
+//            playerObjectWorld.getLeg().setFixedRotation(true);
+//        }
+//
+//        if(Gdx.input.isKeyJustPressed(Input.Keys.F3))
+//            isDebug = !isDebug;
+//
+//        float speed = 5f;
+//        if(Gdx.input.isKeyPressed(Input.Keys.W)){
+//           playerObjectWorld.getBody().applyForceToCenter(0, speed * 5, false);
+//        }
+//        if(Gdx.input.isKeyPressed(Input.Keys.S)){
+//            playerObjectWorld.getBody().applyForceToCenter(0, -speed, false);
+//        }
+//        if(Gdx.input.isKeyPressed(Input.Keys.A)){
+////            playerObjectWorld.getBody().applyForceToCenter(-speed, 0, false);
+//            playerObjectWorld.getLeg().applyTorque(speed * 2, false);
+//        }
+//        if(Gdx.input.isKeyPressed(Input.Keys.D)){
+//            playerObjectWorld.getLeg().applyTorque(-speed * 5, false);
+//        }
+//        Vector2 lin = playerObjectWorld.getBody().getLinearVelocity();
+//        if(Math.abs(lin.x) < 0.01f){
+//            lin.x = 0;
+//        }
+//        if(Math.abs(lin.y) < 0.01f){
+//            lin.y = 0;
+//        }
+//
+//        if(Math.abs(lin.x) > 10f){
+//            lin.x = 10f * (lin.x > 0 ? 1 : -1);
+//        }
+//
+//        playerObjectWorld.getBody().setLinearVelocity(lin);
+    }
 
-        float speed = 5f;
-        if(Gdx.input.isKeyPressed(Input.Keys.W)){
-           playerObjectWorld.getBody().applyForceToCenter(0, speed * 5, false);
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.S)){
-            playerObjectWorld.getBody().applyForceToCenter(0, -speed, false);
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.A)){
-//            playerObjectWorld.getBody().applyForceToCenter(-speed, 0, false);
-            playerObjectWorld.getLeg().applyTorque(5f, false);
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.D)){
-            playerObjectWorld.getLeg().applyTorque(-5f, false);
-        }
-        Vector2 lin = playerObjectWorld.getBody().getLinearVelocity();
-        if(Math.abs(lin.x) < 0.01f){
-            lin.x = 0;
-        }
-        if(Math.abs(lin.y) < 0.01f){
-            lin.y = 0;
-        }
-        playerObjectWorld.getBody().setLinearVelocity(lin);
+    public CursorWorld getCursorWorld() {
+        return cursorWorld;
+    }
+
+    public WorldMap getWorldMap() {
+        return worldMap;
     }
 
     @Override
